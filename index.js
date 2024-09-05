@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+import { exec } from 'child_process';
 async function getLoggedIssuesByDate(dateInput = null) {
     const jiraUrl = process.env.JIRA_URL + '/rest/api/3/search';
     const username = process.env.JIRA_USERNAME;
@@ -42,6 +42,14 @@ async function getLoggedIssuesByDate(dateInput = null) {
             console.log(`No tasks logged for the date: ${dateToQuery}.`);
         } else {
             console.log(resultString);
+
+            exec(`echo "${resultString}" | pbcopy`, (err) => {
+                if (err) {
+                    console.error('Error copying to clipboard:', err);
+                } else {
+                    console.log('The result has been copied to the clipboard.');
+                }
+            });
         }
     } catch (error) {
         console.error('An error occurred:', error);
