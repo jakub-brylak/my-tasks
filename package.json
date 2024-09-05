@@ -1,0 +1,17 @@
+{
+  "name": "my-tasks-stats",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Tool for exporting informations that will be useful for time tracking",
+  "main": "index.js",
+  "bin": {
+    "my-tasks": "index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jakub Brylak",
+  "license": "ISC",
+  "dependencies": {
+  }
+}
