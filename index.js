@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 async function getTodayLoggedIssues() {
     const jiraUrl = `https://your-jira.atlassian.net/rest/api/3/search`;
