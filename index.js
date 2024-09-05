@@ -16,7 +16,6 @@ async function getLoggedIssuesByDate(dateInput = null) {
     }
 
     const jqlQuery = `worklogAuthor = currentUser() AND worklogDate >= "${dateToQuery}" AND worklogDate < "${new Date(new Date(dateToQuery).getTime() + 86400000).toISOString().split('T')[0]}"`;
-
     const headers = {
         'Accept': 'application/json',
         'Authorization': 'Basic ' + Buffer.from(`${username}:${apiToken}`).toString('base64')
@@ -33,16 +32,13 @@ async function getLoggedIssuesByDate(dateInput = null) {
         }
 
         const data = await response.json();
-
         const taskDescriptions = data.issues.map(issue => `${issue.key} ${issue.fields.summary}`);
-
         const resultString = taskDescriptions.join('; ');
 
         if (!taskDescriptions.length) {
             console.log(`No tasks logged for the date: ${dateToQuery}.`);
         } else {
             console.log(resultString);
-
             exec(`echo "${resultString}" | pbcopy`, (err) => {
                 if (err) {
                     console.error('Error copying to clipboard:', err);
