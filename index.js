@@ -1,40 +1,52 @@
-import fetch from 'node-fetch';
+#!/usr/bin/env node
 
-async function getTodayLoggedIssues() {
-    const jiraUrl = `https://your-jira.atlassian.net/rest/api/3/search`;
+async function getLoggedIssuesByDate(dateInput = null) {
+    const jiraUrl = process.env.JIRA_URL + '/rest/api/3/search';
+    const username = process.env.JIRA_USERNAME;
+    const apiToken = process.env.JIRA_API_TOKEN;
 
-    const username = 'your-email@example.com';
-    const apiToken = 'your-api-token';
+    const currentYear = new Date().getFullYear();
+
+    let dateToQuery;
+    if (dateInput) {
+        const [day, month] = dateInput.split('-');
+        dateToQuery = `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    } else {
+        dateToQuery = new Date().toISOString().split('T')[0];
+    }
+
+    const jqlQuery = `worklogAuthor = currentUser() AND worklogDate >= "${dateToQuery}" AND worklogDate < "${new Date(new Date(dateToQuery).getTime() + 86400000).toISOString().split('T')[0]}"`;
 
     const headers = {
-        'Authorization': 'Basic ' + Buffer.from(`${username}:${apiToken}`).toString('base64'),
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Authorization': 'Basic ' + Buffer.from(`${username}:${apiToken}`).toString('base64')
     };
 
-    const today = new Date().toISOString().split('T')[0];
-
     try {
-        const response = await fetch(`${jiraUrl}?jql=worklogAuthor=currentUser() AND worklogDate >= "${today}"`, {
+        const response = await fetch(`${jiraUrl}?jql=${encodeURIComponent(jqlQuery)}&maxResults=100`, {
             method: 'GET',
-            headers: headers,
+            headers: headers
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`Error fetching data from Jira: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
 
-        const taskIds = data.issues.map(issue => issue.key);
+        const taskDescriptions = data.issues.map(issue => `${issue.key} ${issue.fields.summary}`);
 
-        if (taskIds.length === 0) {
-            console.log('No logged time for today.');
+        const resultString = taskDescriptions.join('; ');
+
+        if (!taskDescriptions.length) {
+            console.log(`No tasks logged for the date: ${dateToQuery}.`);
         } else {
-            console.log('You logged time today on tasks:', taskIds);
+            console.log(resultString);
         }
     } catch (error) {
-        console.error('Error occured:', error);
+        console.error('An error occurred:', error);
     }
 }
 
-getTodayLoggedIssues();
+const userInputDate = process.argv[2];
+getLoggedIssuesByDate(userInputDate);
